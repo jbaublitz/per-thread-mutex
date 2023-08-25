@@ -48,7 +48,10 @@
 //! preventing the deadlock that would be caused by a traditional mutex while still guard against
 //! unsafe accesses of the library.
 
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::{
+    io,
+    sync::atomic::{AtomicU32, Ordering},
+};
 
 use libc::gettid;
 use log::trace;
@@ -105,17 +108,29 @@ impl PerThreadMutex {
                     return PerThreadMutexGuard(self, thread_id);
                 } else {
                     trace!("[{}] Thread is waiting", unsafe { libc::gettid() });
-                    match unsafe { libc::syscall(libc::SYS_futex, libc::FUTEX_WAIT, 1, 0, 0, 0) } {
-                        i if i == 0 || i == libc::EINTR as i64 => (),
-                        i if i == libc::EACCES as i64 => {
-                            unreachable!("Local variable is always readable")
-                        }
-                        i if i == libc::EAGAIN as i64 => {
-                            panic!("This mutex should never wait when the mutex is available")
-                        }
-                        _ => unreachable!(
-                            "Only EAGAIN, EACCES, and EINTR are returned by FUTEX_WAIT"
-                        ),
+                    match unsafe {
+                        libc::syscall(
+                            libc::SYS_futex,
+                            self.futex_word.as_ptr(),
+                            libc::FUTEX_WAIT,
+                            1,
+                            0,
+                            0,
+                            0,
+                        )
+                    } {
+                        0 => (),
+                        _ => match io::Error::last_os_error().raw_os_error() {
+                            Some(libc::EINTR | libc::EAGAIN) => (),
+                            Some(libc::EACCES) => {
+                                unreachable!("Local variable is always readable")
+                            }
+                            Some(i) => unreachable!(
+                                "Only EAGAIN, EACCES, and EINTR are returned by FUTEX_WAIT; got {}",
+                                i
+                            ),
+                            None => unreachable!(),
+                        },
                     }
                 }
             }
@@ -147,7 +162,17 @@ impl<'a> Drop for PerThreadMutexGuard<'a> {
             );
             trace!("[{}] Unlocking mutex", self.1);
         }
-        let i = unsafe { libc::syscall(libc::SYS_futex, libc::FUTEX_WAKE, libc::INT_MAX, 0, 0, 0) };
+        let i = unsafe {
+            libc::syscall(
+                libc::SYS_futex,
+                self.0.futex_word.as_ptr(),
+                libc::FUTEX_WAKE as i64,
+                libc::INT_MAX as i64,
+                0,
+                0,
+                0,
+            )
+        };
         trace!("[{}] Number of waiters woken: {}", self.1, i);
     }
 }
