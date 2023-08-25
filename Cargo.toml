@@ -1,0 +1,17 @@
+[package]
+name = "per-thread-mutex"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "per_thread_mutex"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+lazy_static = "1.4.0"
+libc = "0.2.146"
+log = "0.4.20"
+
+[dev-dependencies]
+env_logger = "0.10.0"
