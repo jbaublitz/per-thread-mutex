@@ -59,16 +59,18 @@ pub struct PerThreadMutex {
     acquisitions: AtomicU32,
 }
 
-impl PerThreadMutex {
+impl Default for PerThreadMutex {
     /// Create a new mutex.
-    pub fn new() -> Self {
+    fn default() -> Self {
         PerThreadMutex {
             futex_word: AtomicU32::new(0),
             thread_id: AtomicU32::new(0),
             acquisitions: AtomicU32::new(0),
         }
     }
+}
 
+impl PerThreadMutex {
     /// Acquire a per-thread lock.
     ///
     /// The lock keeps track of the thread ID from which it is called. If a second aquire is called
@@ -100,7 +102,7 @@ impl PerThreadMutex {
                 if self.thread_id.load(Ordering::Relaxed) == thread_id {
                     let count = self.acquisitions.fetch_add(1, Ordering::Relaxed);
                     trace!("[{}] Acquired lock number {}", thread_id, count + 1);
-                    return PerThreadMutexGuard(&self, thread_id);
+                    return PerThreadMutexGuard(self, thread_id);
                 } else {
                     trace!("[{}] Thread is waiting", unsafe { libc::gettid() });
                     match unsafe { libc::syscall(libc::SYS_futex, libc::FUTEX_WAIT, 1, 0, 0, 0) } {
@@ -162,41 +164,41 @@ mod tests {
     fn test_lock() {
         init();
 
-        let mutex = Arc::new(PerThreadMutex::new());
+        let mutex = Arc::new(PerThreadMutex::default());
 
         let mutex_clone = Arc::clone(&mutex);
         let handle1 = spawn(move || {
-            let guard1 = mutex_clone.acquire();
-            let guard2 = mutex_clone.acquire();
-            let guard3 = mutex_clone.acquire();
+            let _guard1 = mutex_clone.acquire();
+            let _guard2 = mutex_clone.acquire();
+            let _guard3 = mutex_clone.acquire();
         });
 
         let mutex_clone = Arc::clone(&mutex);
         let handle2 = spawn(move || {
-            let guard1 = mutex_clone.acquire();
-            let guard2 = mutex_clone.acquire();
-            let guard3 = mutex_clone.acquire();
-            let guard4 = mutex_clone.acquire();
+            let _guard1 = mutex_clone.acquire();
+            let _guard2 = mutex_clone.acquire();
+            let _guard3 = mutex_clone.acquire();
+            let _guard4 = mutex_clone.acquire();
         });
 
         let mutex_clone = Arc::clone(&mutex);
         let handle3 = spawn(move || {
-            let guard1 = mutex_clone.acquire();
-            let guard2 = mutex_clone.acquire();
+            let _guard1 = mutex_clone.acquire();
+            let _guard2 = mutex_clone.acquire();
         });
 
         let mutex_clone = Arc::clone(&mutex);
         let handle4 = spawn(move || {
-            let guard1 = mutex_clone.acquire();
-            let guard2 = mutex_clone.acquire();
-            let guard3 = mutex_clone.acquire();
-            let guard4 = mutex_clone.acquire();
-            let guard5 = mutex_clone.acquire();
+            let _guard1 = mutex_clone.acquire();
+            let _guard2 = mutex_clone.acquire();
+            let _guard3 = mutex_clone.acquire();
+            let _guard4 = mutex_clone.acquire();
+            let _guard5 = mutex_clone.acquire();
         });
 
         let mutex_clone = Arc::clone(&mutex);
         let handle5 = spawn(move || {
-            let guard1 = mutex_clone.acquire();
+            let _guard1 = mutex_clone.acquire();
         });
 
         for handle in vec![handle1, handle2, handle3, handle4, handle5] {
