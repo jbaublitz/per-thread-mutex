@@ -2,9 +2,12 @@
 name = "per-thread-mutex"
 version = "0.1.0"
 edition = "2021"
-
-[lib]
-name = "per_thread_mutex"
+description = "Synchronization lock designed for wrapping thread-unsafe C libraries"
+documentation = "https://docs.rs/per-thread-mutex"
+homepage = "https://github.com/jbaublitz/per-thread-mutex"
+repository = "https://github.com/jbaublitz/per-thread-mutex"
+license = "MPL-2.0"
+keywords = ["synchronization", "multithreading", "bindings"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
