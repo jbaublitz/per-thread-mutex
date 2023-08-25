@@ -73,7 +73,7 @@ impl Default for PerThreadMutex {
 impl PerThreadMutex {
     /// Acquire a per-thread lock.
     ///
-    /// The lock keeps track of the thread ID from which it is called. If a second aquire is called
+    /// The lock keeps track of the thread ID from which it is called. If a second acquire is called
     /// from the same mutex, `acquire()` will grant a lock to that caller as well. Number of
     /// acquisitions is tracked internally and the lock will be released when all acquisitions are
     /// dropped.
