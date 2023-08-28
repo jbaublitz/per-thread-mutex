@@ -226,7 +226,7 @@ mod tests {
             let _guard1 = mutex_clone.acquire();
         });
 
-        for handle in vec![handle1, handle2, handle3, handle4, handle5] {
+        for handle in [handle1, handle2, handle3, handle4, handle5] {
             handle.join().unwrap();
         }
     }
