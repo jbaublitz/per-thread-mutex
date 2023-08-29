@@ -17,7 +17,7 @@
 //! can be used in a multithreaded context provided two conditions are upheld.
 //!
 //! 1. Data structures are thread-localized, meaning any resource that is created in a thread is
-//!    never sent or used by another thread. This can be handled [Send]/[Sync].
+//!    never sent or used by another thread. This can be handled [`Send`]/[`Sync`].
 //! 2. There can be no concurrent calls into the library. This is not addressed by Rust language
 //!    level features.
 //!
