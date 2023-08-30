@@ -84,7 +84,7 @@ impl PerThreadMutex {
         loop {
             if self
                 .futex_word
-                .compare_exchange(0, 1, Ordering::Relaxed, Ordering::Relaxed)
+                .compare_exchange_weak(0, 1, Ordering::Relaxed, Ordering::Relaxed)
                 == Ok(0)
             {
                 let thread_id = unsafe { libc::gettid() } as u32;
