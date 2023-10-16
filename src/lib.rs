@@ -161,19 +161,19 @@ impl<'a> Drop for PerThreadMutexGuard<'a> {
                 Ok(1)
             );
             trace!("[{}] Unlocking mutex", self.1);
+            let i = unsafe {
+                libc::syscall(
+                    libc::SYS_futex,
+                    self.0.futex_word.as_ptr(),
+                    libc::FUTEX_WAKE as i64,
+                    libc::INT_MAX as i64,
+                    0,
+                    0,
+                    0,
+                )
+            };
+            trace!("[{}] Number of waiters woken: {}", self.1, i);
         }
-        let i = unsafe {
-            libc::syscall(
-                libc::SYS_futex,
-                self.0.futex_word.as_ptr(),
-                libc::FUTEX_WAKE as i64,
-                libc::INT_MAX as i64,
-                0,
-                0,
-                0,
-            )
-        };
-        trace!("[{}] Number of waiters woken: {}", self.1, i);
     }
 }
 
