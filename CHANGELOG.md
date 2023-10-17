@@ -1,3 +1,10 @@
+# 0.1.2
+
+# Improvements
+
+* Only wake waiters on the mutex if the mutex is unlocked instead of each time a guard is dropped. This should be an optimization and improve
+performance. (https://github.com/jbaublitz/per-thread-mutex/pull/6)
+
 # 0.1.1
 
 # Improvements
