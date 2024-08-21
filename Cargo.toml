@@ -1,6 +1,6 @@
 [package]
 name = "per-thread-mutex"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "Synchronization lock designed for wrapping thread-unsafe C libraries"
 documentation = "https://docs.rs/per-thread-mutex"

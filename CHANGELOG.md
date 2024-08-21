@@ -1,3 +1,9 @@
+# 0.1.3
+
+# Maintenance
+
+* Remove unused dependency from Cargo.toml. (https://github.com/jbaublitz/per-thread-mutex/pull/9)
+
 # 0.1.2
 
 # Improvements
