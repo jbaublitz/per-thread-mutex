@@ -143,7 +143,7 @@ impl PerThreadMutex {
 /// the first thread that requests the acquisition.
 pub struct PerThreadMutexGuard<'a>(&'a PerThreadMutex, u32);
 
-impl<'a> Drop for PerThreadMutexGuard<'a> {
+impl Drop for PerThreadMutexGuard<'_> {
     fn drop(&mut self) {
         let acquisitions = self.0.acquisitions.fetch_sub(1, Ordering::Relaxed);
         assert!(acquisitions > 0);
