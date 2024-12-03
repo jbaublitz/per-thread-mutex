@@ -84,17 +84,17 @@ impl PerThreadMutex {
         loop {
             if self
                 .futex_word
-                .compare_exchange_weak(0, 1, Ordering::Relaxed, Ordering::Relaxed)
+                .compare_exchange_weak(0, 1, Ordering::AcqRel, Ordering::Acquire)
                 == Ok(0)
             {
                 let thread_id = unsafe { libc::gettid() } as u32;
-                assert_eq!(self.acquisitions.fetch_add(1, Ordering::Relaxed), 0);
+                assert_eq!(self.acquisitions.fetch_add(1, Ordering::AcqRel), 0);
                 assert_eq!(
                     self.thread_id.compare_exchange(
                         0,
                         thread_id,
-                        Ordering::Relaxed,
-                        Ordering::Relaxed
+                        Ordering::AcqRel,
+                        Ordering::Acquire
                     ),
                     Ok(0)
                 );
@@ -102,8 +102,11 @@ impl PerThreadMutex {
                 return PerThreadMutexGuard(self, thread_id);
             } else {
                 let thread_id = unsafe { gettid() } as u32;
-                if self.thread_id.load(Ordering::Relaxed) == thread_id {
-                    let count = self.acquisitions.fetch_add(1, Ordering::Relaxed);
+                if self.thread_id.load(Ordering::Acquire) == thread_id {
+                    let count = self.acquisitions.fetch_add(1, Ordering::AcqRel);
+                    if count == u32::MAX {
+                        panic!("Acquisition counter overflowed");
+                    }
                     trace!("[{}] Acquired lock number {}", thread_id, count + 1);
                     return PerThreadMutexGuard(self, thread_id);
                 } else {
@@ -145,19 +148,19 @@ pub struct PerThreadMutexGuard<'a>(&'a PerThreadMutex, u32);
 
 impl<'a> Drop for PerThreadMutexGuard<'a> {
     fn drop(&mut self) {
-        let acquisitions = self.0.acquisitions.fetch_sub(1, Ordering::Relaxed);
+        let acquisitions = self.0.acquisitions.fetch_sub(1, Ordering::AcqRel);
         assert!(acquisitions > 0);
         if acquisitions == 1 {
             assert_eq!(
                 self.0
                     .thread_id
-                    .compare_exchange(self.1, 0, Ordering::Relaxed, Ordering::Relaxed),
+                    .compare_exchange(self.1, 0, Ordering::AcqRel, Ordering::Acquire),
                 Ok(self.1)
             );
             assert_eq!(
                 self.0
                     .futex_word
-                    .compare_exchange(1, 0, Ordering::Relaxed, Ordering::Relaxed),
+                    .compare_exchange(1, 0, Ordering::AcqRel, Ordering::Acquire),
                 Ok(1)
             );
             trace!("[{}] Unlocking mutex", self.1);
