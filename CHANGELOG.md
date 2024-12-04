@@ -1,3 +1,13 @@
+# 0.1.4
+
+# Maintenance
+
+* Resolve clippy errors. https://github.com/jbaublitz/per-thread-mutex/pull/11
+
+# Bug fixes
+
+* Resolve potential unsoundness issues with atomics and provide and additional check for counter overflow. https://github.com/jbaublitz/per-thread-mutex/pull/12
+
 # 0.1.3
 
 # Maintenance
